@@ -29,6 +29,7 @@ export const login = async (req, res) => {
     return res.status(401).json({ message: 'Invalid credentials' });
 
   const user = result.rows[0];
+
   const valid = await comparePassword(password, user.password_hash);
 
   if (!valid)
@@ -36,8 +37,56 @@ export const login = async (req, res) => {
 
   const payload = { userId: user.id, role: user.role };
 
+  const accessToken = generateAccessToken(payload);
+  const refreshToken = generateRefreshToken(payload);
+
+  await pool.query(
+    'INSERT INTO refresh_tokens (id, user_id, token) VALUES ($1,$2,$3)',
+    [randomUUID(), user.id, refreshToken]
+  );
+
   res.json({
-    accessToken: generateAccessToken(payload),
-    refreshToken: generateRefreshToken(payload)
+    accessToken,
+    refreshToken
   });
 };
+
+
+export const refresh = async(req, res) =>{
+    const {refreshToken} = req.body;
+    
+    if(!refreshToken){
+        return res.status(401).json({message: 'Refresh token is required'});
+    }
+    
+    try{
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+        const result = await pool.query(
+            'SELECT *FROM refresh_token WHERE token=$1',
+            [refreshToken]
+        );
+        if(!result.rows.length){
+            return res.status(401).json({message: 'Invalid refresh token'});
+        }
+        
+        const payload = {
+            userId:decoded.userId,
+            role:decoded.role
+        }
+        
+        const newAccessToken = generateAccessToken(payload);
+        
+        res.json({accessToken: newAccessToken});
+    } catch(err){
+        return res.status(401).json({message:'Invalid refresh token'});
+    }
+};
+
+export const logout = async(req, res)=>{
+    const {refreshToken} = req.body;
+    await pool.query(
+        'DELETE FROM refresh_token WHERE token=$1',
+        [refreshToken]
+    );
+    res.json({message: 'Logged out successfully'});
+}
