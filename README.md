@@ -1,5 +1,5 @@
 FULL PROJECT PLAN
-Online Food Ordering & Delivery Platform (SDE-Level)
+Online Food Ordering & Delivery Platform
 
 PHASE 0 — FOUNDATION (Week 0)
 Goal: Set strong base before writing “real” code
@@ -183,3 +183,4 @@ Kafka & Kubernetes Q&A
 Deliverables:
 Resume-ready project
 Interview confidence
+
