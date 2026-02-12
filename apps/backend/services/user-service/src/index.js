@@ -1,17 +1,8 @@
-import express from 'express';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const app = express();
-app.use(express.json());
+import app from './app.js';
 
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'auth',
-    time: new Date().toISOString()
-  });
-});
-
-const PORT = 4002;
-app.listen(PORT, () => {
-  console.log(`Auth Service running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`User Service running on port ${process.env.PORT}`);
 });
