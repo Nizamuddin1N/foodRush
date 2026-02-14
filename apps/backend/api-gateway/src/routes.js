@@ -15,4 +15,8 @@ export const setupRoutes = (app)=>{
         target:process.env.RESTAURANT_SERVICE,
         changeOrigin: true
     }))
+    app.use('/orders', createProxyMiddleware({
+    target: process.env.ORDER_SERVICE,
+    changeOrigin: true
+    }));
 };
