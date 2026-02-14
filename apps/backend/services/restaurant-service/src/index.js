@@ -1,17 +1,11 @@
-import express from 'express';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const app = express();
-app.use(express.json());
+import app from './app.js';
+import {connectDB} from './db/index.js';
 
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'auth',
-    time: new Date().toISOString()
-  });
-});
-
-const PORT = 4003;
-app.listen(PORT, () => {
-  console.log(`Auth Service running on port ${PORT}`);
+connectDB().then(()=>{
+    app.listen(process.env.PORT, ()=>{
+        console.log(`Restaurant servie running on port ${process.env.PORT}`);
+    });
 });
