@@ -1,47 +1,87 @@
 import { pool } from '../db/index.js';
 import { v4 as uuidv4 } from 'uuid';
+import {randomUUID} from 'crypto';
+import axios from 'axios';
 
 export const createOrder = async (req, res) => {
-  const { restaurantId, items } = req.body;
-  const userId = req.user.userId;
-
-  const totalAmount = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  const orderId = uuidv4();
+  const client = await pool.connect();
 
   try {
-    await pool.query('BEGIN');
+    const { restaurantId, items } = req.body;
+    const userId = req.user.userId;
 
-    await pool.query(
+    if (!items || !items.length) {
+      return res.status(400).json({ message: 'No items provided' });
+    }
+
+    let totalAmount = 0;
+    const orderId = randomUUID();
+
+    await client.query('BEGIN');
+
+    // 🔹 1. Calculate total & validate items
+    const validatedItems = [];
+
+    for (const item of items) {
+      const response = await axios.get(
+        `${process.env.RESTAURANT_SERVICE}/menu/${item.menuItemId}`
+      );
+
+      const menuItem = response.data;
+
+      if (!menuItem)
+        return res.status(404).json({ message: 'Menu item not found' });
+
+      if (!menuItem.isAvailable)
+        return res.status(400).json({ message: 'Item not available' });
+
+      if (menuItem.restaurantId !== restaurantId)
+        return res.status(400).json({ message: 'Restaurant mismatch' });
+
+      const itemTotal = menuItem.price * item.quantity;
+      totalAmount += itemTotal;
+
+      validatedItems.push({ menuItem, quantity: item.quantity });
+    }
+
+    // 🔹 2. INSERT ORDER FIRST (IMPORTANT)
+    await client.query(
       `INSERT INTO orders (id, user_id, restaurant_id, status, total_amount)
        VALUES ($1, $2, $3, $4, $5)`,
       [orderId, userId, restaurantId, 'CREATED', totalAmount]
     );
 
-    for (const item of items) {
-      await pool.query(
+    // 🔹 3. INSERT ORDER ITEMS
+    for (const { menuItem, quantity } of validatedItems) {
+      await client.query(
         `INSERT INTO order_items
          (id, order_id, menu_item_id, name, price, quantity)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [uuidv4(), orderId, item.menuItemId, item.name, item.price, item.quantity]
+        [
+          randomUUID(),
+          orderId,
+          menuItem._id,
+          menuItem.name,
+          menuItem.price,
+          quantity
+        ]
       );
     }
 
-    await pool.query('COMMIT');
+    await client.query('COMMIT');
 
     res.status(201).json({
-      id: orderId,
-      status: 'CREATED',
+      message: 'Order created',
+      orderId,
       totalAmount
     });
 
-  } catch (err) {
-    await pool.query('ROLLBACK');
-    console.error('ORDER ERROR 👉', err.message);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error(error);
     res.status(500).json({ message: 'Order creation failed' });
+  } finally {
+    client.release();
   }
 };
 

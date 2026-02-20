@@ -62,3 +62,12 @@ export const getMenu = async (req, res) => {
   const menu = await MenuItem.find({ restaurantId: id });
   res.json(menu);
 };
+
+export const getMenuItemById = async(req, res)=>{
+    const {menuItemId} = req.params;
+    const item = await MenuItem.findById(menuItemId);
+    if(!item){
+        return res.status(404).json({message:'Menu item not found'});
+    }
+    res.json(item);
+};
