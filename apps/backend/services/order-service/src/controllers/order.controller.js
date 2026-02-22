@@ -124,8 +124,8 @@ export const getOrderById = async (req, res) => {
 
   const order = orderRes.rows[0];
 
-  if (order.user_id !== req.user.id)
-    return res.status(403).json({ message: 'Not your order' });
+//   if (order.user_id !== req.user.id)
+//     return res.status(403).json({ message: 'Not your order' });
 
   const itemsRes = await pool.query(
     `SELECT * FROM order_items WHERE order_id = $1`,

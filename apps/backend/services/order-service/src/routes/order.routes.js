@@ -7,6 +7,6 @@ const router = express.Router();
 router.post('/',authenticate, createOrder);
 router.get('/user', authenticate, getMyOrders);
 router.get('/:id', authenticate, getOrderById);
-router.patch('/:id/status', authenticate,authorizeRestaurant, updateOrderStatus);
+router.patch('/:id/status', authenticate, updateOrderStatus);
 
 export default router;

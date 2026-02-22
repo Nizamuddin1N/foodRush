@@ -16,7 +16,12 @@ export const setupRoutes = (app)=>{
         changeOrigin: true
     }))
     app.use('/orders', createProxyMiddleware({
-    target: process.env.ORDER_SERVICE,
-    changeOrigin: true
+        target: process.env.ORDER_SERVICE,
+        changeOrigin: true
+    }));
+    
+    app.use('/payments', createProxyMiddleware({
+        target: process.env.PAYMENT_SERVICE,
+        changeOrigin: true
     }));
 };
