@@ -1,6 +1,7 @@
 import { pool } from '../db/index.js';
 import { randomUUID } from 'crypto';
 import axios from 'axios';
+import { publishPaymentSuccess } from '../kafka/producer.js';
 
 export const processPayment = async (req, res) => {
   const client = await pool.connect();
@@ -22,7 +23,7 @@ export const processPayment = async (req, res) => {
     }
 
     const orderResponse = await axios.get(
-      `${process.env.ORDER_SERVICE}/orders/${orderId}`,
+      `${process.env.ORDER_SERVICE}/${orderId}`,
       {
         headers: {
           Authorization: req.headers.authorization
@@ -44,15 +45,11 @@ export const processPayment = async (req, res) => {
       [paymentId, orderId, userId, order.total_amount, 'SUCCESS']
     );
 
-    await axios.patch(
-      `${process.env.ORDER_SERVICE}/orders/${orderId}/status`,
-      { status: 'CONFIRMED' },
-      {
-        headers: {
-          Authorization: req.headers.authorization
-        }
-      }
-    );
+    await publishPaymentSuccess({
+      orderId,
+      userId,
+      amount: order.total_amount
+    });
 
     await client.query('COMMIT');
 
