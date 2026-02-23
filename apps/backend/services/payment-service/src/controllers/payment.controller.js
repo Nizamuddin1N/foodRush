@@ -45,12 +45,23 @@ export const processPayment = async (req, res) => {
       [paymentId, orderId, userId, order.total_amount, 'SUCCESS']
     );
 
-    await publishPaymentSuccess({
-      orderId,
-      userId,
-      amount: order.total_amount
-    });
-
+    // await publishPaymentSuccess({
+    //   orderId,
+    //   userId,
+    //   amount: order.total_amount
+    // });
+    await client.query(
+        'INSERT INTO outbox_events (id, event_type, payload) VALUES ($1,$2,$3)',
+        [
+            randomUUID(),
+            'PAYMENT_SUCCESS',
+            JSON.stringify({
+            orderId,
+            userId,
+            amount: order.total_amount
+            })
+        ]
+    );
     await client.query('COMMIT');
 
     res.json({
