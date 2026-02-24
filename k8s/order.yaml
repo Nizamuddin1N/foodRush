@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          image: food-delivery-platform-order-service:latest
+          imagePullPolicy: Never
+          env:
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "Nizamuddin@513"
+            - name: DB_NAME
+              value: "postgres"
+            - name: RESTAURANT_SERVICE
+              value: "http://restaurant-service:4003"
+            - name: JWT_ACCESS_SECRET
+              value: "897o867i5eursxcgvghiji0i43q4a"
+            - name: KAFKA_BROKER
+              value: "kafka:9092"
+          ports:
+            - containerPort: 4004
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+spec:
+  selector:
+    app: order-service
+  ports:
+    - port: 4004
+      targetPort: 4004

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: food-delivery-platform-auth-service:latest
+          imagePullPolicy: Never
+          env:
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "Nizamuddin@513"
+            - name: DB_NAME
+              value: "postgres"
+            - name: JWT_ACCESS_SECRET
+              value: "897o867i5eursxcgvghiji0i43q4a"
+            - name: JWT_REFRESH_SECRET
+              value: "ytyrts1234545687908uihghcxzx"
+          ports:
+            - containerPort: 4001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 4001
+      targetPort: 4001
