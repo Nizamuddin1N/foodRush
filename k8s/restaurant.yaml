@@ -21,6 +21,8 @@ spec:
               value: "mongodb://mongo:27017/restaurant_db"
             - name: JWT_ACCESS_SECRET
               value: "897o867i5eursxcgvghiji0i43q4a"
+            - name: REDIS_HOST
+              value: "redis"
           ports:
             - containerPort: 4003
 ---

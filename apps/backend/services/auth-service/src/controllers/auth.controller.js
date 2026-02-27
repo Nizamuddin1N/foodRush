@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { pool } from '../db/index.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
@@ -62,7 +63,7 @@ export const refresh = async(req, res) =>{
     try{
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
         const result = await pool.query(
-            'SELECT *FROM refresh_token WHERE token=$1',
+            'SELECT *FROM refresh_tokens WHERE token=$1',
             [refreshToken]
         );
         if(!result.rows.length){
@@ -85,7 +86,7 @@ export const refresh = async(req, res) =>{
 export const logout = async(req, res)=>{
     const {refreshToken} = req.body;
     await pool.query(
-        'DELETE FROM refresh_token WHERE token=$1',
+        'DELETE FROM refresh_tokens WHERE token=$1',
         [refreshToken]
     );
     res.json({message: 'Logged out successfully'});

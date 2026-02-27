@@ -1,73 +1,75 @@
-import Restaurant from '../models/restaurant.model.js';
-import MenuItem from '../models/menu.model.js';
+import Restaurant from '../models/restaurant.model.js'
+import MenuItem from '../models/menu.model.js'
+import { redis } from '../redis/client.js'
 
-/**
- * POST /restaurants
- * Only RESTAURANT role
- */
 export const createRestaurant = async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description } = req.body
 
   const restaurant = await Restaurant.create({
     name,
     description,
     ownerId: req.user.id
-  });
+  })
 
-  res.status(201).json(restaurant);
-};
+  res.status(201).json(restaurant)
+}
 
-/**
- * GET /restaurants
- * Public
- */
 export const getAllRestaurants = async (req, res) => {
-  const restaurants = await Restaurant.find();
-  res.json(restaurants);
-};
+  const restaurants = await Restaurant.find()
+  res.json(restaurants)
+}
 
-/**
- * POST /restaurants/:id/menu
- * Only RESTAURANT role
- */
 export const addMenuItem = async (req, res) => {
-  const { id } = req.params;
-  const { name, price, category } = req.body;
+  const { id } = req.params
+  const { name, price, category } = req.body
 
-  const restaurant = await Restaurant.findById(id);
+  const restaurant = await Restaurant.findById(id)
 
   if (!restaurant)
-    return res.status(404).json({ message: 'Restaurant not found' });
+    return res.status(404).json({ message: 'Restaurant not found' })
 
   if (restaurant.ownerId !== req.user.id)
-    return res.status(403).json({ message: 'Not your restaurant' });
+    return res.status(403).json({ message: 'Not your restaurant' })
 
   const item = await MenuItem.create({
     restaurantId: id,
     name,
     price,
     category
-  });
+  })
 
-  res.status(201).json(item);
-};
+  const cacheKey = `menu:${id}`
+  await redis.del(cacheKey)
 
-/**
- * GET /restaurants/:id/menu
- * Public
- */
+  res.status(201).json(item)
+}
+
 export const getMenu = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params
+  const cacheKey = `menu:${id}`
 
-  const menu = await MenuItem.find({ restaurantId: id });
-  res.json(menu);
-};
+  const cached = await redis.get(cacheKey)
 
-export const getMenuItemById = async(req, res)=>{
-    const {menuItemId} = req.params;
-    const item = await MenuItem.findById(menuItemId);
-    if(!item){
-        return res.status(404).json({message:'Menu item not found'});
-    }
-    res.json(item);
-};
+  if (cached) {
+    return res.json(JSON.parse(cached))
+  }
+
+  const menu = await MenuItem.find({ restaurantId: id })
+
+  await redis.set(cacheKey, JSON.stringify(menu), {
+    EX: 60
+  })
+
+  res.json(menu)
+}
+
+export const getMenuItemById = async (req, res) => {
+  const { menuItemId } = req.params
+
+  const item = await MenuItem.findById(menuItemId)
+
+  if (!item)
+    return res.status(404).json({ message: 'Menu item not found' })
+
+  res.json(item)
+}

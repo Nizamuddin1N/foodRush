@@ -32,8 +32,18 @@ spec:
             - PLAINTEXT://0.0.0.0:9092
             - --advertise-kafka-addr
             - PLAINTEXT://kafka:9092
+          env:
+            - name: REDPANDA_DATA_DIRECTORY
+              value: /var/lib/redpanda/data
           ports:
             - containerPort: 9092
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /var/lib/redpanda/data
+      volumes:
+        - name: kafka-data
+          persistentVolumeClaim:
+            claimName: kafka-pvc
 ---
 apiVersion: v1
 kind: Service

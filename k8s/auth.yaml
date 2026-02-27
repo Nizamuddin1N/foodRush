@@ -31,6 +31,8 @@ spec:
               value: "897o867i5eursxcgvghiji0i43q4a"
             - name: JWT_REFRESH_SECRET
               value: "ytyrts1234545687908uihghcxzx"
+            - name: REDIS_HOST
+              value: "redis"
           ports:
             - containerPort: 4001
 ---
