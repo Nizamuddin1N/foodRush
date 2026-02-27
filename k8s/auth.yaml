@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: food-delivery-platform-auth-service:latest
-          imagePullPolicy: Never
+          image: nizamuddin1n/auth-service:latest
+          imagePullPolicy: Always
           env:
             - name: DB_HOST
               value: "postgres"

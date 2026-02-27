@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: restaurant-service
-          image: food-delivery-platform-restaurant-service:latest
-          imagePullPolicy: Never
+          image: nizamuddin1n/restaurant-service:latest
+          imagePullPolicy: Always
           env:
             - name: MONGO_URI
               value: "mongodb://mongo:27017/restaurant_db"

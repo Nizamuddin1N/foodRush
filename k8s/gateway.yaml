@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: food-delivery-platform-api-gateway:latest
-          imagePullPolicy: Never
+          image: nizamuddin1n/api-gateway:latest
+          imagePullPolicy: Always
           env:
             - name: AUTH_SERVICE
               value: "http://auth-service:4001"

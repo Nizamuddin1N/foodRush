@@ -1,0 +1,57 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Auth
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/auth-service:latest ./apps/backend/services/auth-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/auth-service:latest
+
+      - name: Build and Push User
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/user-service:latest ./apps/backend/services/user-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/user-service:latest
+
+      - name: Build and Push Restaurant
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/restaurant-service:latest ./apps/backend/services/restaurant-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/restaurant-service:latest
+
+      - name: Build and Push Order
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/order-service:latest ./apps/backend/services/order-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/order-service:latest
+
+      - name: Build and Push Payment
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/payment-service:latest ./apps/backend/services/payment-service
+          docker push ${{ secrets.DOCKER_USERNAME }}/payment-service:latest
+
+      - name: Build and Push Gateway
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest ./apps/backend/api-gateway
+          docker push ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
+
+      - name: Deploy to Kubernetes
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
+          export KUBECONFIG=kubeconfig.yaml
+          kubectl rollout restart deployment auth-service
+          kubectl rollout restart deployment user-service
+          kubectl rollout restart deployment restaurant-service
+          kubectl rollout restart deployment order-service
+          kubectl rollout restart deployment payment-service
+          kubectl rollout restart deployment api-gateway

@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: payment-service
-          image: food-delivery-platform-payment-service:latest
-          imagePullPolicy: Never
+          image: nizamuddin1n/payment-service:latest
+          imagePullPolicy: Always
           env:
             - name: DB_HOST
               value: "postgres"
