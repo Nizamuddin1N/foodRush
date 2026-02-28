@@ -3,6 +3,6 @@ import orderRoutes from './routes/order.routes.js';
 
 const app = express();
 app.use(express.json());
-app.use('/', orderRoutes);
+app.use('/orders', orderRoutes);
 
 export default app;

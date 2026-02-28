@@ -12,6 +12,6 @@ app.get('/protected', authenticate, (req, res) => {
     user: req.user
   });
 });
-app.use('/', authRoutes);
+app.use('/auth', authRoutes);
 
 export default app;
