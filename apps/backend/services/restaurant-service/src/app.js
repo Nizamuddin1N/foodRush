@@ -3,6 +3,6 @@ import restaurantRoutes from "./routes/restaurant.controller.js";
 
 const app = express();
 app.use(express.json());
-app.use('/restaurants', restaurantRoutes);
+app.use('/', restaurantRoutes);
 
 export default app;

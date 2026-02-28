@@ -10,7 +10,7 @@ app.get('/health', (req, res) => {
 });
 
 //MOUNT ROUTES CORRECTLY
-app.use('/payments', paymentRoutes);
+app.use('/', paymentRoutes);
 
 // FALLBACK
 app.use((req, res) => {
