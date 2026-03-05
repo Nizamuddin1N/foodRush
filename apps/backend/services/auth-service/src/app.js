@@ -12,6 +12,10 @@ app.get('/protected', authenticate, (req, res) => {
     user: req.user
   });
 });
+app.get('/health', (req,res)=>{
+  res.json({service:"auth service working"})
+})
+
 app.use('/', authRoutes);
 
 export default app;

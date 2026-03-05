@@ -3,8 +3,10 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 const proxyOptions = (target) => ({
   target,
   changeOrigin: true,
-  pathRewrite: (path, req) => path.replace(/^\/[^/]+/, ''),
-  
+  logLevel: "debug",
+
+  pathRewrite: (path) => path.replace(/^\/[^/]+/, ''),
+
   onError(err, req, res) {
     console.error(`Proxy error for ${req.originalUrl}:`, err.message);
 
@@ -14,7 +16,7 @@ const proxyOptions = (target) => ({
     });
   },
 
-  onProxyReq(proxyReq, req, res) {
+  onProxyReq(proxyReq, req) {
     console.log(`Proxying ${req.method} ${req.originalUrl} -> ${target}`);
   }
 });
