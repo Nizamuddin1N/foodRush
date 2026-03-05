@@ -7,9 +7,13 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'API Gateway running' });
+});
+
 setupRoutes(app);
 
-// ✅ bullet-proof
 const PORT = Number(process.env.PORT) || 4000;
 
 app.listen(PORT, '0.0.0.0', () => {
