@@ -1,30 +1,14 @@
 version: '3.8'
 
 services:
-
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Nizamuddin@513
-      POSTGRES_DB: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres-init:/docker-entrypoint-initdb.d
-    expose:
-      - "5432"
-
-  mongo:
-    image: mongo
-    expose:
-      - "27017"
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
     expose:
       - "2181"
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
@@ -33,82 +17,82 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      KAFKA_LOG_RETENTION_HOURS: 1
+      KAFKA_LOG_SEGMENT_BYTES: 536870912
     expose:
       - "9092"
+    restart: unless-stopped
 
   auth-service:
     build: ./apps/backend/services/auth-service
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: Nizamuddin@513
-      DB_NAME: postgres
-      JWT_ACCESS_SECRET: 897o867i5eursxcgvghiji0i43q4a
-      JWT_REFRESH_SECRET: ytyrts1234545687908uihghcxzx
-    depends_on:
-      - postgres
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     expose:
       - "4001"
+    restart: unless-stopped
 
   user-service:
     build: ./apps/backend/services/user-service
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: Nizamuddin@513
-      DB_NAME: postgres
-      JWT_ACCESS_SECRET: 897o867i5eursxcgvghiji0i43q4a
-    depends_on:
-      - postgres
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
     expose:
       - "4002"
+    restart: unless-stopped
 
   restaurant-service:
     build: ./apps/backend/services/restaurant-service
     environment:
-      MONGO_URI: mongodb://mongo:27017/restaurant_db
-      JWT_ACCESS_SECRET: 897o867i5eursxcgvghiji0i43q4a
-    depends_on:
-      - mongo
+      MONGO_URI: ${MONGO_URI}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
     expose:
       - "4003"
+    restart: unless-stopped
 
   order-service:
     build: ./apps/backend/services/order-service
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: Nizamuddin@513
-      DB_NAME: postgres
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
       RESTAURANT_SERVICE: http://restaurant-service:4003
-      JWT_ACCESS_SECRET: 897o867i5eursxcgvghiji0i43q4a
-    depends_on:
-      - postgres
-      - kafka
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      KAFKA_BROKER: kafka:9092
     expose:
       - "4004"
+    restart: unless-stopped
 
   payment-service:
     build: ./apps/backend/services/payment-service
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: Nizamuddin@513
-      DB_NAME: postgres
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
       ORDER_SERVICE: http://order-service:4004
-      JWT_ACCESS_SECRET: 897o867i5eursxcgvghiji0i43q4a
-    depends_on:
-      - postgres
-      - kafka
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      KAFKA_BROKER: kafka:9092
     expose:
       - "4005"
+    restart: unless-stopped
 
   api-gateway:
     build: ./apps/backend/api-gateway
@@ -119,14 +103,12 @@ services:
       RESTAURANT_SERVICE: http://restaurant-service:4003
       ORDER_SERVICE: http://order-service:4004
       PAYMENT_SERVICE: http://payment-service:4005
+    ports:
+      - "4000:4000"
     depends_on:
       - auth-service
       - user-service
       - restaurant-service
       - order-service
       - payment-service
-    ports:
-      - "4000:4000"
-
-volumes:
-  postgres_data:
+    restart: unless-stopped
