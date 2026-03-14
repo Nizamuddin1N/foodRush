@@ -8,20 +8,20 @@ dotenv.config()
 const app = express()
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "*",
   credentials: true
 }))
 
 app.use(express.json())
 
-app.get('/health', (req,res)=>{
-  res.json({status:"API Gateway running"})
+app.get('/health', (req, res) => {
+  res.json({ status: "API Gateway running" })
 })
 
 setupRoutes(app)
 
 const PORT = Number(process.env.PORT) || 4000
 
-app.listen(PORT,'0.0.0.0',()=>{
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`API Gateway running on port ${PORT}`)
 })
