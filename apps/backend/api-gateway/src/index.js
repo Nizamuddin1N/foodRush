@@ -12,13 +12,14 @@ app.use(cors({
   credentials: true
 }))
 
-app.use(express.json())
 
 app.get('/health', (req, res) => {
   res.json({ status: "API Gateway running" })
 })
 
 setupRoutes(app)
+
+app.use(express.json())
 
 const PORT = Number(process.env.PORT) || 4000
 
