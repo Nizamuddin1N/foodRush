@@ -45,13 +45,14 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest ./apps/backend/api-gateway
           docker push ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
 
-      - name: Deploy to Kubernetes
-        run: |
-          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig.yaml
-          export KUBECONFIG=kubeconfig.yaml
-          kubectl rollout restart deployment auth-service
-          kubectl rollout restart deployment user-service
-          kubectl rollout restart deployment restaurant-service
-          kubectl rollout restart deployment order-service
-          kubectl rollout restart deployment payment-service
-          kubectl rollout restart deployment api-gateway
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/food-delivery-platform
+            docker-compose pull
+            docker-compose up -d
+            docker-compose ps

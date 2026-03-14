@@ -1,21 +1,27 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import { setupRoutes } from './routes.js';
+import express from 'express'
+import dotenv from 'dotenv'
+import cors from 'cors'
+import { setupRoutes } from './routes.js'
 
-dotenv.config();
+dotenv.config()
 
-const app = express();
-app.use(express.json());
+const app = express()
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'API Gateway running' });
-});
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}))
 
-setupRoutes(app);
+app.use(express.json())
 
-const PORT = Number(process.env.PORT) || 4000;
+app.get('/health', (req,res)=>{
+  res.json({status:"API Gateway running"})
+})
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`API Gateway running on port ${PORT}`);
-});
+setupRoutes(app)
+
+const PORT = Number(process.env.PORT) || 4000
+
+app.listen(PORT,'0.0.0.0',()=>{
+  console.log(`API Gateway running on port ${PORT}`)
+})
