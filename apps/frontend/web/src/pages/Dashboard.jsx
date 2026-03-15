@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
 import api from "../api/axios"
 import { useAuth } from "../context/AuthContext"
 import toast from "react-hot-toast"
@@ -20,17 +19,32 @@ export default function Dashboard() {
     fetchData()
   }, [])
 
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      await api.patch(`/orders/${orderId}/status`, { status })
+      toast.success(`Order marked as ${status}!`)
+      const ordersRes = await api.get(`/orders/restaurant/${restaurant?._id}`)
+      setOrders(ordersRes.data)
+    } catch (err) {
+      toast.error("Failed to update status")
+    }
+  }
+
   const fetchData = async () => {
     try {
       const res = await api.get("/restaurants")
       const allRestaurants = res.data
-      const myRestaurant = allRestaurants.find(r => 
-  r.ownerId === userId || r.ownerId === userId?.toString()
-)
+      const myRestaurant = allRestaurants.find(r =>
+        r.ownerId === userId || r.ownerId === userId?.toString()
+      )
       if (myRestaurant) {
         setRestaurant(myRestaurant)
-        const menuRes = await api.get(`/restaurants/${myRestaurant._id}/menu`)
+        const [menuRes, ordersRes] = await Promise.all([
+          api.get(`/restaurants/${myRestaurant._id}/menu`),
+          api.get(`/orders/restaurant/${myRestaurant._id}`)
+        ])
         setMenu(menuRes.data)
+        setOrders(ordersRes.data)
       }
     } catch (err) {
       console.error(err)
@@ -97,7 +111,6 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
 
-        {/* No restaurant yet */}
         {!restaurant ? (
           <div className="bg-white rounded-3xl shadow-md p-10 text-center">
             <span className="text-6xl">🍽️</span>
@@ -112,7 +125,6 @@ export default function Dashboard() {
               + Create Restaurant
             </button>
 
-            {/* Create Restaurant Form */}
             {showCreateRestaurant && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
@@ -184,12 +196,14 @@ export default function Dashboard() {
                 <p className="text-gray-500 text-sm mt-1">Menu Items</p>
               </div>
               <div className="bg-white rounded-2xl shadow p-5 text-center">
-                <p className="text-3xl font-bold text-green-500">Active</p>
-                <p className="text-gray-500 text-sm mt-1">Status</p>
+                <p className="text-3xl font-bold text-blue-500">{orders.length}</p>
+                <p className="text-gray-500 text-sm mt-1">Total Orders</p>
               </div>
               <div className="bg-white rounded-2xl shadow p-5 text-center">
-                <p className="text-3xl font-bold text-blue-500">⭐ 4.5</p>
-                <p className="text-gray-500 text-sm mt-1">Rating</p>
+                <p className="text-3xl font-bold text-green-500">
+                  {orders.filter(o => o.status === "DELIVERED").length}
+                </p>
+                <p className="text-gray-500 text-sm mt-1">Delivered</p>
               </div>
             </div>
 
@@ -236,6 +250,105 @@ export default function Dashboard() {
                         }`}>
                           {item.isAvailable ? "Available" : "Unavailable"}
                         </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Orders Section */}
+            <div className="bg-white rounded-3xl shadow-md p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">
+                Incoming Orders
+                {orders.length > 0 && (
+                  <span className="ml-2 bg-orange-100 text-orange-600 text-sm font-semibold px-3 py-1 rounded-full">
+                    {orders.length}
+                  </span>
+                )}
+              </h3>
+
+              {orders.length === 0 ? (
+                <div className="text-center py-10">
+                  <span className="text-4xl">📦</span>
+                  <p className="text-gray-400 mt-2">No orders yet</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map(order => (
+                    <div key={order.id} className="border border-gray-100 rounded-2xl p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="text-xs text-gray-400 uppercase font-semibold">Order</p>
+                          <p className="font-mono text-sm text-gray-700">
+                            #{order.id.slice(0, 8).toUpperCase()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900">₹{order.total_amount}</p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(order.created_at).toLocaleDateString("en-IN", {
+                              day: "numeric", month: "short",
+                              hour: "2-digit", minute: "2-digit"
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mb-4 space-y-1">
+                        {order.items?.map((item, i) => (
+                          <div key={i} className="flex justify-between text-sm text-gray-600">
+                            <span>{item.name} × {item.quantity}</span>
+                            <span>₹{item.price * item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                          order.status === "DELIVERED" ? "bg-green-100 text-green-600" :
+                          order.status === "CONFIRMED" ? "bg-yellow-100 text-yellow-600" :
+                          order.status === "PREPARING" ? "bg-orange-100 text-orange-600" :
+                          order.status === "OUT_FOR_DELIVERY" ? "bg-purple-100 text-purple-600" :
+                          "bg-blue-100 text-blue-600"
+                        }`}>
+                          {order.status}
+                        </span>
+
+                        <div className="flex gap-2">
+                          {order.status === "CREATED" && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, "CONFIRMED")}
+                              className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold px-3 py-2 rounded-xl transition"
+                            >
+                              Confirm
+                            </button>
+                          )}
+                          {order.status === "CONFIRMED" && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, "PREPARING")}
+                              className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-2 rounded-xl transition"
+                            >
+                              Start Preparing
+                            </button>
+                          )}
+                          {order.status === "PREPARING" && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, "OUT_FOR_DELIVERY")}
+                              className="bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold px-3 py-2 rounded-xl transition"
+                            >
+                              Out for Delivery
+                            </button>
+                          )}
+                          {order.status === "OUT_FOR_DELIVERY" && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, "DELIVERED")}
+                              className="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold px-3 py-2 rounded-xl transition"
+                            >
+                              Mark Delivered
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

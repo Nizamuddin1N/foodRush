@@ -9,6 +9,7 @@ import Orders from "../pages/Orders"
 import Navbar from "../components/Navbar"
 import ProtectedRoute from "../components/ProtectedRoute"
 import Dashboard from "../pages/Dashboard"
+import Profile from "../pages/Profile"
 
 export default function AppRoutes() {
   return (
@@ -30,6 +31,9 @@ export default function AppRoutes() {
         } />
         <Route path="/payment/:orderId" element={
           <ProtectedRoute><Payment /></ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+        <ProtectedRoute><Profile /></ProtectedRoute>
         } />
         <Route path="/orders" element={
           <ProtectedRoute><Orders /></ProtectedRoute>

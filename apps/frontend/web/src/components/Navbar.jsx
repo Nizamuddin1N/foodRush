@@ -35,7 +35,9 @@ export default function Navbar() {
               >
                 My Orders
               </Link>
-
+              <Link to="/profile"className="text-gray-600 hover:text-orange-500 font-medium text-sm transition hidden sm:block">
+                Profile
+              </Link>
               {/* ← ADD THIS BLOCK HERE */}
               {role === "RESTAURANT" && (
                 <Link
