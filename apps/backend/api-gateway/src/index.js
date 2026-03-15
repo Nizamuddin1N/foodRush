@@ -10,7 +10,7 @@ const app = express()
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://foodrush-nizamuddin1ns-projects.vercel.app/"
+    "https://foodrush-nizamuddin1ns-projects.vercel.app"
   ],
   credentials: true
 }))

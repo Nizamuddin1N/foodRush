@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: "https://seeking-quiz-accomplish-dock.trycloudflare.com"
+  baseURL: "https://foodrush.duckdns.org"
 })
 
 api.interceptors.request.use((config) => {
