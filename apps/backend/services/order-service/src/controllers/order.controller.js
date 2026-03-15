@@ -35,7 +35,7 @@ export const createOrder = async (req, res) => {
       if (!menuItem.isAvailable)
         return res.status(400).json({ message: 'Item not available' });
 
-      if (menuItem.restaurantId !== restaurantId)
+      if (menuItem.restaurantId.toString() !== restaurantId.toString())
         return res.status(400).json({ message: 'Restaurant mismatch' });
 
       const itemTotal = menuItem.price * item.quantity;
