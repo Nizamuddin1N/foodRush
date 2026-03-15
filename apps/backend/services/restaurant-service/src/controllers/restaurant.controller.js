@@ -56,9 +56,7 @@ export const getMenu = async (req, res) => {
 
   const menu = await MenuItem.find({ restaurantId: id })
 
-  await redis.set(cacheKey, JSON.stringify(menu), {
-    EX: 60
-  })
+  await redis.set(cacheKey, JSON.stringify(menu), 'EX', 60)
 
   res.json(menu)
 }
