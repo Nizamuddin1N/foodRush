@@ -92,16 +92,23 @@ export const createOrder = async (req, res) => {
  */
 export const getMyOrders = async (req, res) => {
   try {
-    console.log('JWT USER ID:', req.user.userId);
-
     const result = await pool.query(
       `SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC`,
       [req.user.userId]
     );
 
-    console.log('ORDERS FOUND:', result.rows.length);
+    // Fetch items for each order
+    const ordersWithItems = await Promise.all(
+      result.rows.map(async (order) => {
+        const itemsResult = await pool.query(
+          `SELECT * FROM order_items WHERE order_id = $1`,
+          [order.id]
+        );
+        return { ...order, items: itemsResult.rows };
+      })
+    );
 
-    res.json(result.rows);
+    res.json(ordersWithItems);
   } catch (err) {
     console.error('GET MY ORDERS ERROR:', err.message);
     res.status(500).json({ message: 'Failed to fetch orders' });

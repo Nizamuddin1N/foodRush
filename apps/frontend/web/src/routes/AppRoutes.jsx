@@ -7,6 +7,8 @@ import Cart from "../pages/Cart"
 import Payment from "../pages/Payment"
 import ProtectedRoute from "../components/ProtectedRoute"
 import Navbar from "../components/Navbar"
+import Orders from "../pages/Orders"
+
 
 export default function AppRoutes(){
 
@@ -20,6 +22,7 @@ export default function AppRoutes(){
         <Route path="/signup" element={<Signup />} />
         <Route path="/cart" element={<ProtectedRoute><Cart/></ProtectedRoute>}/>
         <Route path="/payment/:orderId" element={<Payment/>}/>
+        <Route path="/orders" element={<Orders/>}/>
 
       </Routes>
 
