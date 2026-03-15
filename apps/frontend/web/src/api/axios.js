@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://13.127.82.84:4000"
+  baseURL: "https://seeking-quiz-accomplish-dock.trycloudflare.com"
 })
 
 api.interceptors.request.use((config) => {
