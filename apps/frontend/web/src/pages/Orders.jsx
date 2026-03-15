@@ -3,12 +3,13 @@ import api from "../api/axios"
 import { Link } from "react-router-dom"
 
 const STATUS_CONFIG = {
-  CREATED: { color: "bg-blue-100 text-blue-600", icon: "📋", label: "Order Placed" },
-  CONFIRMED: { color: "bg-yellow-100 text-yellow-600", icon: "✅", label: "Confirmed" },
-  PREPARING: { color: "bg-orange-100 text-orange-600", icon: "👨‍🍳", label: "Preparing" },
-  OUT_FOR_DELIVERY: { color: "bg-purple-100 text-purple-600", icon: "🛵", label: "On the way" },
-  DELIVERED: { color: "bg-green-100 text-green-600", icon: "🎉", label: "Delivered" },
-  PAYMENT_RECEIVED: { color: "bg-green-100 text-green-600", icon: "💚", label: "Payment Received" },
+  CREATED: { color: "bg-blue-100 text-blue-700", icon: "📋", label: "Order Placed" },
+  CONFIRMED: { color: "bg-yellow-100 text-yellow-700", icon: "✅", label: "Confirmed" },
+  PREPARING: { color: "bg-orange-100 text-orange-700", icon: "👨‍🍳", label: "Preparing" },
+  OUT_FOR_DELIVERY: { color: "bg-purple-100 text-purple-700", icon: "🛵", label: "On the way" },
+  DELIVERED: { color: "bg-green-100 text-green-700", icon: "🎉", label: "Delivered" },
+  CANCELLED: { color: "bg-red-100 text-red-700", icon: "❌", label: "Cancelled" },
+  PAYMENT_RECEIVED: { color: "bg-green-100 text-green-700", icon: "💚", label: "Payment Received" },
 }
 
 export default function Orders() {
@@ -60,40 +61,51 @@ export default function Orders() {
               const statusCfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.CREATED
               return (
                 <div key={order.id} className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+                  {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Order ID</p>
-                      <p className="font-mono text-sm text-gray-700">{order.id}</p>
+                      <p className="font-mono text-xs text-gray-400">#{order.id.slice(0, 8).toUpperCase()}</p>
                     </div>
-                    <span className={`${statusCfg.color} text-sm font-semibold px-3 py-1 rounded-full flex items-center gap-1`}>
+                    <span className={`${statusCfg.color} text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1`}>
                       {statusCfg.icon} {statusCfg.label}
                     </span>
                   </div>
 
                   {/* Items */}
                   {order.items && order.items.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-500 mb-2">Items:</p>
-                      <div className="space-y-1">
-                        {order.items.map((item, i) => (
-                          <div key={i} className="flex justify-between text-sm">
-                            <span className="text-gray-700">{item.name || item.menuItemId} × {item.quantity}</span>
-                            {item.price && <span className="text-gray-500">₹{item.price * item.quantity}</span>}
+                    <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                      <p className="text-xs text-gray-400 uppercase font-semibold mb-3">Items</p>
+                      <div className="space-y-2">
+                        {order.items.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🍕</span>
+                              <span className="text-sm font-medium text-gray-800">{item.name}</span>
+                              <span className="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">
+                                ×{item.quantity}
+                              </span>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-700">
+                              ₹{item.price * item.quantity}
+                            </span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                  {/* Footer */}
+                  <div className="flex items-center justify-between">
                     <div>
                       <span className="text-gray-500 text-sm">Total: </span>
-                      <span className="font-bold text-gray-900">₹{order.total_amount || order.totalAmount || "—"}</span>
+                      <span className="font-bold text-gray-900 text-lg">₹{order.total_amount}</span>
                     </div>
                     <span className="text-gray-400 text-xs">
-                      {order.created_at ? new Date(order.created_at).toLocaleDateString("en-IN", {
-                        day: "numeric", month: "short", year: "numeric"
-                      }) : ""}
+                      {new Date(order.created_at).toLocaleDateString("en-IN", {
+                        day: "numeric", month: "short", year: "numeric",
+                        hour: "2-digit", minute: "2-digit"
+                      })}
                     </span>
                   </div>
                 </div>

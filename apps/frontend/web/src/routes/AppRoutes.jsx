@@ -5,28 +5,39 @@ import Restaurants from "../pages/Restaurants"
 import Menu from "../pages/Menu"
 import Cart from "../pages/Cart"
 import Payment from "../pages/Payment"
-import ProtectedRoute from "../components/ProtectedRoute"
-import Navbar from "../components/Navbar"
 import Orders from "../pages/Orders"
+import Navbar from "../components/Navbar"
+import ProtectedRoute from "../components/ProtectedRoute"
+import Dashboard from "../pages/Dashboard"
 
-
-export default function AppRoutes(){
-
+export default function AppRoutes() {
   return (
     <BrowserRouter>
-        <Navbar/>
+      <Navbar />
       <Routes>
-        <Route path="/" element={<Restaurants/>}/>
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/restaurant/:id" element={<Menu/>}/>
         <Route path="/signup" element={<Signup />} />
-        <Route path="/cart" element={<ProtectedRoute><Cart/></ProtectedRoute>}/>
-        <Route path="/payment/:orderId" element={<Payment/>}/>
-        <Route path="/orders" element={<Orders/>}/>
 
+        {/* Public browsing */}
+        <Route path="/" element={<Restaurants />} />
+        <Route path="/restaurant/:id" element={<Menu />} />
+        
+
+        {/* Protected routes */}
+        <Route path="/cart" element={
+          <ProtectedRoute><Cart /></ProtectedRoute>
+        } />
+        <Route path="/payment/:orderId" element={
+          <ProtectedRoute><Payment /></ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute><Orders /></ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+        <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
       </Routes>
-
     </BrowserRouter>
   )
-
 }

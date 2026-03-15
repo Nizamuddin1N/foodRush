@@ -2,6 +2,7 @@ import { useCart } from "../context/CartContext"
 import api from "../api/axios"
 import { useNavigate, Link } from "react-router-dom"
 import { useState } from "react"
+import toast from "react-hot-toast"
 
 export default function Cart() {
   const navigate = useNavigate()
@@ -30,6 +31,7 @@ export default function Cart() {
       navigate(`/payment/${orderId}`)
     } catch (err) {
       setError(err.response?.data?.message || "Failed to place order. Try again.")
+      toast.error("Failed to place order. Try again.")
     } finally {
       setLoading(false)
     }

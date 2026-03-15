@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext"
 import { useCart } from "../context/CartContext"
 
 export default function Navbar() {
-  const { token, logout } = useAuth()
+  const { token, logout, role } = useAuth()
   const { cart } = useCart()
   const navigate = useNavigate()
 
@@ -35,6 +35,16 @@ export default function Navbar() {
               >
                 My Orders
               </Link>
+
+              {/* ← ADD THIS BLOCK HERE */}
+              {role === "RESTAURANT" && (
+                <Link
+                  to="/dashboard"
+                  className="text-gray-600 hover:text-orange-500 font-medium text-sm transition hidden sm:block"
+                >
+                  Dashboard
+                </Link>
+              )}
 
               <Link to="/cart" className="relative">
                 <div className="flex items-center gap-2 bg-orange-50 hover:bg-orange-100 text-orange-600 font-semibold px-4 py-2 rounded-xl transition">

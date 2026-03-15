@@ -1,6 +1,7 @@
 import { useState } from "react"
 import api from "../api/axios"
 import { useNavigate, Link } from "react-router-dom"
+import toast from "react-hot-toast"
 
 export default function Signup() {
   const navigate = useNavigate()
@@ -16,6 +17,7 @@ export default function Signup() {
     setError("")
     try {
       await api.post("/auth/signup", form)
+      toast.success("Account created! please login.")
       navigate("/login")
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed. Try again.")

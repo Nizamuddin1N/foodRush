@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom"
 import api from "../api/axios"
 import { useState } from "react"
+import toast from "react-hot-toast"
 
 export default function Payment() {
   const { orderId } = useParams()
@@ -14,10 +15,12 @@ export default function Payment() {
     setError("")
     try {
       await api.post("/payments", { orderId })
+      toast.success("Payment successful! 🎉")
       setPaid(true)
       setTimeout(() => navigate("/orders"), 2500)
     } catch (err) {
       setError(err.response?.data?.message || "Payment failed. Try again.")
+      toast.error("Payment failed. Try again.")
     } finally {
       setLoading(false)
     }
@@ -53,7 +56,7 @@ export default function Payment() {
           {/* Order ID */}
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
             <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Order ID</p>
-            <p className="text-gray-700 font-mono text-sm break-all">{orderId}</p>
+            <p className="text-gray-400 font-mono text-xs">{orderId.slice(0,8).toUpperCase()}...</p>
           </div>
 
           {/* Simulated payment form */}

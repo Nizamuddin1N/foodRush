@@ -8,7 +8,7 @@ export const createRestaurant = async (req, res) => {
   const restaurant = await Restaurant.create({
     name,
     description,
-    ownerId: req.user.id
+    ownerId: req.user.userId
   })
 
   res.status(201).json(restaurant)
@@ -28,7 +28,7 @@ export const addMenuItem = async (req, res) => {
   if (!restaurant)
     return res.status(404).json({ message: 'Restaurant not found' })
 
-  if (restaurant.ownerId !== req.user.id)
+  if (restaurant.ownerId !== req.user.userId)
     return res.status(403).json({ message: 'Not your restaurant' })
 
   const item = await MenuItem.create({

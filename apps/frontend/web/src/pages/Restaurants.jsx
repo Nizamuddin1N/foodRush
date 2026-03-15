@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import api from "../api/axios"
 import { Link } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 
 const FOOD_EMOJIS = ["🍕", "🍔", "🍜", "🌮", "🍱", "🥘", "🍣", "🥗"]
 const BG_COLORS = [
