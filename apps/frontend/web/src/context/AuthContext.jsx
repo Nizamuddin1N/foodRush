@@ -7,7 +7,6 @@ const decodeToken = (token) => {
   try {
     const base64 = token.split('.')[1]
     const decoded = JSON.parse(atob(base64))
-    console.log(decoded)
     return decoded
   } catch {
     return null

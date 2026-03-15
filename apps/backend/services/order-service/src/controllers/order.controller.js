@@ -171,3 +171,34 @@ export const updateOrderStatus = async (req, res) => {
 
   res.json(result.rows[0]);
 };
+
+
+/**
+ * GET /orders/restaurant/:restaurantId
+ * Get all orders for a restaurant (owner only)
+ */
+export const getRestaurantOrders = async (req, res) => {
+  try {
+    const { restaurantId } = req.params
+
+    const result = await pool.query(
+      `SELECT * FROM orders WHERE restaurant_id = $1 ORDER BY created_at DESC`,
+      [restaurantId]
+    )
+
+    const ordersWithItems = await Promise.all(
+      result.rows.map(async (order) => {
+        const itemsResult = await pool.query(
+          `SELECT * FROM order_items WHERE order_id = $1`,
+          [order.id]
+        )
+        return { ...order, items: itemsResult.rows }
+      })
+    )
+
+    res.json(ordersWithItems)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to fetch restaurant orders' })
+  }
+}
