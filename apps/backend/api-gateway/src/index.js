@@ -11,13 +11,16 @@ app.use(cors({
   origin: "*"
 }))
 
-app.use(express.json())
-
+// Health check BEFORE routes
 app.get('/health', (req, res) => {
   res.json({ status: "API Gateway running" })
 })
 
+// Proxy routes BEFORE express.json()
 setupRoutes(app)
+
+// express.json() AFTER proxy routes
+app.use(express.json())
 
 const PORT = Number(process.env.PORT) || 4000
 
