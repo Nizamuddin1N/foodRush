@@ -8,11 +8,7 @@ dotenv.config()
 const app = express()
 
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://foodrush-nizamuddin1ns-projects.vercel.app"
-  ],
-  credentials: true
+  origin: "*"
 }))
 
 app.use(express.json())
