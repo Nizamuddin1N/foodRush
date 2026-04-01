@@ -1,326 +1,107 @@
-# Food Delivery Platform
+# 🍕 Food Delivery Platform
 
-A **full-stack, cloud-native food delivery platform** built using a **microservices architecture**, event-driven communication, distributed caching, CI/CD pipelines, and cloud deployment.
+**A cloud-native food delivery platform built with microservices. Think Zomato or Swiggy, but engineered from scratch.**
 
-The platform simulates a **real-world production system similar to Zomato, Swiggy, or Uber Eats**, demonstrating scalable backend design, distributed systems patterns, and modern DevOps practices.
-
----
-
-# 🏗 System Architecture
-
-### High-Level Architecture
-
-```
-Frontend (React)
-        │
-        ▼
-API Gateway
-        │
-        ▼
--------------------------------------------------
-Auth Service        User Service
-Restaurant Service  Order Service
-Payment Service
--------------------------------------------------
-        │
-        ▼
-Event Streaming (Kafka)
-        │
-        ▼
-Order Status Updates
-```
-
-### Infrastructure Layer
-
-```
-AWS EC2
-   │
-Docker Containers
-   │
-----------------------------------------
-AWS RDS PostgreSQL
-MongoDB Atlas
-Redis Cache
-Kafka Event Broker
-----------------------------------------
-```
-
-### CI/CD Pipeline
-
-```
-GitHub
-   │
-GitHub Actions
-   │
-Docker Hub
-   │
-Automatic Deployment
-```
+[![GitHub](https://img.shields.io/badge/GitHub-Nizamuddin1N-181717?style=flat-square&logo=github)](https://github.com/Nizamuddin1N)
+[![Node](https://img.shields.io/badge/node-20.x-339933?style=flat-square&logo=node.js)](https://nodejs.org)
+[![React](https://img.shields.io/badge/react-18-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![Kafka](https://img.shields.io/badge/kafka-event--driven-231F20?style=flat-square&logo=apachekafka)](https://kafka.apache.org)
+[![Docker](https://img.shields.io/badge/docker-containerized-2496ED?style=flat-square&logo=docker)](https://docker.com)
+[![AWS](https://img.shields.io/badge/AWS-EC2%20%2B%20RDS-FF9900?style=flat-square&logo=amazonaws)](https://aws.amazon.com)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
 ---
 
-# 🎯 Core Features
+Five independent services. Two databases. One Kafka broker. Zero shared memory.
 
-## 👤 Authentication & Authorization
+This platform simulates a production-grade food delivery system — customers browse restaurants, place orders, pay, and track delivery status in real time. Behind the scenes, each concern is a separate microservice communicating asynchronously over Kafka. Payment confirmation doesn't call the order service directly — it publishes an event, and the order service reacts. Services fail independently and recover independently.
 
-- User signup and login
-- JWT-based authentication
-- Refresh token strategy
-- Role-based access control
-- Rate limiting using Redis
+Built to understand what distributed systems actually feel like to build, not just read about.
 
 ---
 
-## 🍽 Restaurant Management
+## What it actually does
 
-Users can:
-
-- Browse restaurants
-- View menus
-- Explore menu categories
-- Search restaurants
-- Filter restaurants
-
-Restaurant owners can:
-
-- Add menu items
-- Update menu items
-- Manage availability
-- View incoming orders
+- **Auth service** — JWT access + refresh token strategy, rate limiting via Redis, role-based access control
+- **Restaurant service** — browse, search, filter restaurants, menu management for owners, Redis-cached menus
+- **Order service** — full order lifecycle from CREATED → CONFIRMED → PREPARING → OUT_FOR_DELIVERY → DELIVERED
+- **Payment service** — idempotent payment processing, transaction-safe, event-driven order confirmation
+- **API gateway** — single entry point, centralized routing to all services
+- **Outbox pattern** — guaranteed exactly-once Kafka event delivery even if the service crashes mid-transaction
+- **Event-driven flow** — payment success publishes to Kafka topic, order service consumes and updates status asynchronously
 
 ---
 
-## 🛒 Cart & Ordering
+## Tech stack
 
-Customers can:
+| Layer | Tech |
+|---|---|
+| Frontend | React 18, Vite, TailwindCSS, Axios, React Router, Context API |
+| Backend | Node.js, Express (per service) |
+| Relational DB | PostgreSQL on AWS RDS — users, orders, payments |
+| Document DB | MongoDB Atlas — restaurants and menu data |
+| Cache | Redis — menu caching, rate limiting |
+| Event broker | Apache Kafka — async inter-service communication |
+| Containers | Docker, Docker Compose |
+| Orchestration | Kubernetes — deployments, services, health probes, HPA |
+| CI/CD | GitHub Actions → Docker Hub → Kubernetes rollouts |
+| Cloud | AWS EC2 (compute), AWS RDS (managed PostgreSQL) |
 
-- Add menu items to cart
-- Update quantities
-- Remove items from cart
-- View cart totals
-- Place orders
+---
 
-### Order Lifecycle
+## How the event-driven architecture works
 
+This was the most interesting part to design. The naive approach is synchronous calls between services — payment calls order, order calls notification. The problem is coupling: if the order service is down, payment fails too. Every service becomes a single point of failure for every other service.
+
+The solution is Kafka. When a payment succeeds, the payment service writes two things atomically: the payment record to PostgreSQL, and an event to an outbox table in the same transaction. A background worker polls the outbox table, publishes events to Kafka, and marks them processed. The order service has a Kafka consumer that reacts to payment events and updates order status.
+
+If the order service is down when payment happens, the event sits in Kafka until the service recovers. No data is lost, no synchronous dependency exists between services.
+
+This is the **Outbox Pattern** — guarantees exactly-once delivery even when services crash between writing to the DB and publishing to Kafka.
+
+---
+
+## System architecture
 ```
-CREATED
-CONFIRMED
-PREPARING
-OUT_FOR_DELIVERY
-DELIVERED
+React Frontend
+      │
+      ▼
+  API Gateway
+      │
+ ┌────┼────────────────────┐
+ ▼    ▼                    ▼
+Auth  Restaurant        Order + Payment
+      │                    │
+   MongoDB              PostgreSQL
+   Redis Cache             │
+                        Kafka Topic
+                           │
+                    Order Status Update
 ```
 
 ---
 
-## 💳 Payment System
-
-- Dedicated payment microservice
-- Idempotent payment processing
-- Transaction-safe payment handling
-- Event-driven order confirmation
-
----
-
-# ⚡ Event-Driven Architecture
-
-The system uses **Apache Kafka** for asynchronous communication between services.
-
-### Event Flow
-
-```
-Payment Success Event
-        ↓
-Kafka Topic
-        ↓
-Order Service Consumer
-        ↓
-Order Status Updated
-```
-
-### Benefits
-
-- Decoupled microservices
-- High scalability
-- Fault tolerance
-- Asynchronous processing
-
----
-
-# 🧠 Outbox Pattern
-
-To ensure **reliable event delivery**, the system implements the **Outbox Pattern**.
-
-Workflow:
-
-1. Payment transaction is stored in the database
-2. Event is saved to an outbox table
-3. Background worker publishes event to Kafka
-4. Event is marked as processed
-
-This ensures **exactly-once message delivery semantics**.
-
----
-
-# ⚡ Distributed Caching (Redis)
-
-Redis is used for:
-
-- Restaurant menu caching
-- Login rate limiting
-- Performance optimization
-- Reducing database load
-
----
-
-# 🎨 Frontend Application
-
-Built using **React + Vite**.
-
-### Features
-
-- Login / Signup pages
-- Restaurant listing
-- Menu browsing
-- Add-to-cart functionality
-- Cart management
-- Order placement
-- Payment interface
-- Order history
-- Order tracking
-
-### Frontend Structure
-
-```
-src/
- ├── api/
- ├── context/
- ├── pages/
- ├── components/
- └── routes/
-```
-
-### Technologies
-
-- React
-- Axios
-- React Router
-- Context API
-- TailwindCSS
-
----
-
-# 🧩 Microservices
-
-| Service | Responsibility |
-|------|------|
-| Auth Service | User authentication |
-| User Service | User profiles & addresses |
-| Restaurant Service | Restaurant and menu data |
-| Order Service | Order lifecycle management |
-| Payment Service | Payment processing |
-| API Gateway | Centralized routing |
-
----
-
-# 🗄 Databases
-
-| Database | Purpose |
-|------|------|
-| PostgreSQL (AWS RDS) | Users, orders, payments |
-| MongoDB Atlas | Restaurants and menu data |
-| Redis | Caching and rate limiting |
-| Kafka | Event streaming |
-
----
-
-# ⚙ DevOps & Infrastructure
-
-The platform demonstrates modern **DevOps practices**.
-
-### Containerization
-
-All services run inside **Docker containers**.
-
-```
-Docker
-Docker Compose
-```
-
----
-
-### Kubernetes Deployment
-
-Services are deployed using Kubernetes with:
-
-- Deployments
-- Services
-- Health probes
-- Horizontal scaling
-
----
-
-### CI/CD Pipeline
-
-Automated pipeline using:
-
-```
-GitHub Actions
-Docker Hub
-Kubernetes Rollouts
-```
-
-### Pipeline Workflow
-
-1. Push code to GitHub
-2. Build Docker images
-3. Push images to Docker Hub
-4. Deploy services to cluster
-
----
-
-# ☁ Cloud Deployment
-
-Infrastructure runs on **AWS**.
-
-| Service | Provider |
-|------|------|
-| EC2 | Application hosting |
-| RDS PostgreSQL | Managed relational database |
-| MongoDB Atlas | Managed NoSQL database |
-| Docker | Container runtime |
-
----
-
-# 📦 Local Development Setup
-
-### Clone Repository
-
-```
-git clone https://github.com/yourusername/food-delivery-platform
+## Getting started locally
+```bash
+# Clone
+git clone https://github.com/Nizamuddin1N/foodRush
 cd food-delivery-platform
-```
 
-### Start Backend Services
-
-```
+# Start all backend services
 docker-compose up --build
-```
 
-### Run Frontend
-
-```
+# Frontend (new terminal)
 cd apps/frontend/web
 npm install
 npm run dev
 ```
 
+Open `http://localhost:5173`
+
 ---
 
-# 🌐 Environment Variables
-
-Example backend configuration:
-
-```
+## Environment variables
+```env
 DB_HOST=
 DB_PORT=
 DB_USER=
@@ -338,96 +119,50 @@ MONGO_URI=
 
 ---
 
-# 📊 System Design Highlights
-
-This project demonstrates several advanced backend engineering concepts:
-
-- Microservices architecture
-- Event-driven communication
-- Distributed caching
-- Idempotent payment processing
-- Outbox pattern
-- CI/CD automation
-- Cloud deployment
-- Hybrid database architecture
-
----
-
-# 📈 Scalability Considerations
-
-The architecture supports:
-
-- Horizontal service scaling
-- Event-driven processing
-- Load balancing
-- Stateless services
-- Database separation
-
----
-
-# 🔐 Security Features
-
-- JWT authentication
-- Rate limiting
-- Secure environment variables
-- API gateway routing
-- Role-based authorization
-
----
-
-# 🧪 Example User Workflow
-
+## Project structure
 ```
-Signup
-  ↓
-Login
-  ↓
-Browse Restaurants
-  ↓
-View Menu
-  ↓
-Add to Cart
-  ↓
-Place Order
-  ↓
-Payment
-  ↓
-Order Confirmation
+food-delivery-platform/
+├── services/
+│   ├── auth-service/        JWT, refresh tokens, rate limiting
+│   ├── user-service/        Profiles and addresses
+│   ├── restaurant-service/  Menus, search, Redis cache
+│   ├── order-service/       Order lifecycle, Kafka consumer
+│   ├── payment-service/     Idempotent payments, outbox pattern
+│   └── api-gateway/         Centralized routing
+├── apps/
+│   └── frontend/web/        React + Vite + TailwindCSS
+├── k8s/                     Kubernetes manifests
+├── docker-compose.yml
+└── .github/workflows/       CI/CD pipeline
 ```
 
 ---
 
-# 📚 Learning Outcomes
+## CI/CD pipeline
 
-This project demonstrates practical knowledge of:
-
-- Distributed systems
-- Cloud architecture
-- Backend scalability
-- DevOps pipelines
-- Full-stack development
-- Event-driven design
+Push to main → GitHub Actions builds Docker images for each service → pushes to Docker Hub → triggers Kubernetes rolling deployment on AWS EC2. Each service deploys independently — a change to the payment service doesn't redeploy the restaurant service.
 
 ---
 
-# 👨‍💻 Author
+## Microservices breakdown
 
-**Nizamuddin**
-
-B.Tech Computer Science Engineering  
-University of Delhi — Faculty of Technology
-
-### Interests
-
-- Distributed Systems
-- Backend Engineering
-- Cloud Infrastructure
-- Artificial Intelligence & Machine Learning
+| Service | Database | Responsibility |
+|---|---|---|
+| Auth Service | PostgreSQL | Signup, login, JWT, refresh tokens |
+| User Service | PostgreSQL | Profiles, addresses |
+| Restaurant Service | MongoDB + Redis | Menus, search, caching |
+| Order Service | PostgreSQL | Lifecycle management, Kafka consumer |
+| Payment Service | PostgreSQL | Processing, outbox pattern |
+| API Gateway | — | Routing, auth validation |
 
 ---
 
-# ⭐ Final Note
+## Known limitations
 
-This project was built to explore **real-world scalable system design**, combining backend engineering, cloud deployment, and modern DevOps practices.
+- Kafka and Kubernetes setup requires some infrastructure knowledge to run locally — Docker Compose is the easier path for local dev
+- Payment service is a simulation, not connected to a real payment provider
+- No real-time delivery tracking on a map yet
+  
+---
 
-It serves as a **production-style architecture demonstration** for full-stack and backend engineering roles.
+*Built by [Nizamuddin](https://github.com/Nizamuddin1N)*
