@@ -1,4 +1,4 @@
-# 🍕 Food Delivery Platform
+# 🍕 FoodRush
 
 **A cloud-native food delivery platform built with microservices. Think Zomato or Swiggy, but engineered from scratch.**
 
